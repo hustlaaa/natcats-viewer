@@ -80,8 +80,8 @@ const showItems = page => {
                 <div class="natcat">
                     <img class="pixel-image" src="./img/${id}.png" data-bs-toggle="modal" data-bs-target="#modal" data-natcat-id="${id}">
                     <span class="h6"><a href="./img/${id}.png" target="_blank">${id}</a></span>
-
-                    ${for_sale ? `<div class="for-sale">For Sale<br />${price.toFixed(3)} BTC</div>` : ''}
+                    
+                    ${for_sale ? `<div class="for-sale">For Sale<br />${price.toFixed(3)} BTC</div>` : `<a href="${attributes.find(a => a.trait_type === 'magic_eden_link').value}" class="buy" target="_blank">buy</a>`}
                 </div>
             </li>`
     })
