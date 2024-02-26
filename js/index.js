@@ -383,7 +383,14 @@ const setupModal = () => {
                         const { trait_type, value } = attr
 
                         if(!['magic_eden_link'].includes(trait_type) && ![false, null].includes(value)) {
-                            html += `<tr><td>${trait_type}</td><td>${value}</td></tr>`
+                            const amount_of_this_trait = natcats.filter(n => n.attributes.filter(a => a.trait_type === trait_type && a.value === value).length).length
+                            const total_cats = natcats.length
+
+                            if(!['inscription_number'].includes(trait_type)) {
+                                html += `<tr><td>${trait_type}</td><td>${value}</td><td>${amount_of_this_trait} / ${total_cats} (${parseFloat(amount_of_this_trait/total_cats*100).toFixed(2)}%)</td></tr>`
+                            } else {
+                                html += `<tr><td>${trait_type}</td><td>${value}</td><td></td></tr>`
+                            }
                         }
                     })
 
