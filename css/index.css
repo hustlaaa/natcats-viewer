@@ -68,3 +68,24 @@
     background-color: rgb(233, 58, 136) !important;
     opacity: 0.5;
 }
+
+div.natcat {
+    position: relative;
+    overflow: hidden;
+}
+
+.for-sale {
+    width: 100px;
+    background: #e82;
+    top: 5px;
+    left: -35px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 8px;
+    color: #fff;
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+    z-index: 1;
+    position: absolute;
+}
+  

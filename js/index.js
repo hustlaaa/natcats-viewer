@@ -9,6 +9,7 @@ const filterForm = document.querySelector('#filter-form')
 const filterChoices = document.querySelector('#filter-choices')
 const filteredAmount = document.querySelector('#filtered-amount')
 const result = document.querySelector('#result')
+let mscribe_listings = []
 
 let numberOfPages = 10
 let currentPage = 1
@@ -18,6 +19,40 @@ const params = new Proxy(new URLSearchParams(window.location.search), {
 })
 
 let params_natcats = params && params.natcats ? params.natcats.split(',') : []
+
+const get_listings = async () => {
+    const myHeaders = new Headers()
+    myHeaders.append('Accept', 'application/json')
+    myHeaders.append('Cache-Control', 'no-cache')
+    myHeaders.append('Connection', 'keep-alive')
+    myHeaders.append('Content-Type', 'application/json')
+    myHeaders.append('Pragma', 'no-cache')
+    myHeaders.append('Sec-Fetch-Dest', 'empty')
+    myHeaders.append('Sec-Fetch-Mode', 'cors')
+    myHeaders.append('Sec-Fetch-Site', 'same-origin')
+    
+    const raw = JSON.stringify({
+        'limit': 1000,
+        'offset': 0,
+        'search_text': 'NATCATS',
+        'latest': 1,
+        'price_range': [
+            null,
+            null
+        ],
+        'listing_type': 3,
+        'access_token': 'EJGHPQVL4PDM2G6KB8YKLEDYXZS5L4F7'
+    })
+
+    const requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    }
+    
+    return fetch('https://mscribe.io/api/listings/list', requestOptions)
+}
 
 const setActivePage = page => {
     // reset all active states first
@@ -39,12 +74,15 @@ const showItems = page => {
     let html = '<ul>'
 
     itemsToShow.forEach(item => {
-        let { id, name, attributes } = item
+        let { id, name, attributes, for_sale = false, price = 0 } = item
         html += `
             <li title="${name}">
-                <img class="pixel-image" src="./img/${id}.png" data-bs-toggle="modal" data-bs-target="#modal" data-natcat-id="${id}">
-                <span class="h6"><a href="./img/${id}.png" target="_blank">${id}</a></span>
-                <a href="${attributes.find(a => a.trait_type === 'magic_eden_link').value}" class="buy" target="_blank">buy</a>
+                <div class="natcat">
+                    <img class="pixel-image" src="./img/${id}.png" data-bs-toggle="modal" data-bs-target="#modal" data-natcat-id="${id}">
+                    <span class="h6"><a href="./img/${id}.png" target="_blank">${id}</a></span>
+
+                    ${for_sale ? `<div class="for-sale">For Sale<br />${price.toFixed(3)} BTC</div>` : ''}
+                </div>
             </li>`
     })
 
@@ -54,7 +92,6 @@ const showItems = page => {
 
     setActivePage(page)
 }
-
 
 const setAmount = () => {
     filteredAmount.innerHTML = `Result: ${natcats_result.length} Natcats`
@@ -81,6 +118,9 @@ const setAmount = () => {
 const selectFilter = (name, value) => {
     if(value === '') {
         delete filter_choices[name]
+
+        // also reset listed checkbox
+        document.querySelector('#filter-for-sale').checked = false
     } else {
         filter_choices[name] = value
     }
@@ -174,15 +214,30 @@ const updatePaginationNav = () => {
     )    
 }
 
-const setupEventHandler = () => {
-    document.querySelector('#search').addEventListener("keyup", (event) => {
-        if (event.isComposing || event.keyCode === 229) {
+const setupEventHandlers = () => {
+    document.querySelector('#search').addEventListener("keyup", (e) => {
+        if (e.isComposing || e.keyCode === 229) {
           return;
         }
 
         natcats_result = filtered_natcats.filter(n => n.id.toString().includes(document.querySelector('#search').value))
         setAmount()
         showItems(1)
+    })
+
+    document.querySelector('#filter-for-sale').addEventListener("change", (e) => {
+        if(e.target.checked) {
+            natcats_result = filtered_natcats
+                .filter(n => n.for_sale)
+                .sort((a, b) => a.price - b.price)
+
+            setAmount()
+            showItems(1)    
+        } else {
+            natcats_result = filtered_natcats
+            setAmount()
+            showItems(1) 
+        }
     })
 }
 
@@ -193,6 +248,19 @@ const makeFilter = () => {
     filterForm.innerHTML = ''
     result.innerHTML = 'Loading data..'
     let filterFormHTML = ''
+
+    if(mscribe_listings.length) {
+        filterFormHTML += `<div class="row g-3 mb-2 align-items-center">
+            <label for="mscribe_listings" class="col-sm-4 col-form-label text-start">Mscribe Listings</label>
+            <div class="col-sm-8">
+                <select class="form-select" id="mscribe_listings" aria-label="Default select example">
+                    <option value="">- all -</option>
+                    <option value="true">- all -</option>
+                    <option value="">- all -</option>
+                </select>
+            </div>
+        </div>`
+    }
 
     natcats[0].attributes.forEach(attr => {
         keys.push(attr.trait_type)
@@ -287,7 +355,9 @@ const setupModal = () => {
                 if(cat) {
                     const {
                         attributes,
-                        name
+                        name,
+                        for_sale = false,
+                        price = 0
                     } = cat
 
                     const modalTitle = modal.querySelector('.modal-title')
@@ -298,7 +368,10 @@ const setupModal = () => {
                     html += `<img src="./img/${catId}.png" style="width: 100%" />`
 
                     html += '<div class="d-grid gap-2 pt-3">'
-                    html += `<a href="${attributes.find(a => a.trait_type === 'magic_eden_link').value}" target="_blank" class="btn btn-magiceden">Go to MagicEden</a>`
+                    html += `<a href="${attributes.find(a => a.trait_type === 'magic_eden_link').value}" target="_blank" class="btn btn-magiceden">View on MagicEden</a>`
+                    if(for_sale) {
+                        html += `<a href="https://mscribe.io/marketplace" target="_blank" class="btn btn-warning">Listed at ${price.toFixed(3)} BTC<br />on Mscribe (select "UNAT")</a>`
+                    }
                     html += '</div>'
 
                     html += '</div>'
@@ -330,23 +403,50 @@ const setupModal = () => {
 }
 
 const init = async () => {
-    natcats = await fetch('./traits.json?ts=1708880751776').then(res=>res.json()).catch(e=>console.log(e))
+    try {
+        natcats = await fetch('./traits.json?ts=1708880751776').then(res=>res.json()).catch(e=>console.log(e))
 
-    if(params_natcats.length) {
-        filtered_natcats = natcats.filter(n => params_natcats.includes(n.id.toString()))
+        try {
+            let listings = await get_listings().then(response => response.json())
+
+            if(listings.success) {
+                mscribe_listings = listings.data
+
+                natcats.forEach(n => {
+                    const { id } = n
+                    const listing = mscribe_listings.filter(m => m.json.blk === id.toString())
+
+                    if(listing.length) {
+                        n.for_sale = true
+                        n.price = parseInt(listing[0].seller_price, 10) / (10 ** 8)
+                    } else {
+                        n.for_sale = false
+                    }
+                })
+            }
+        } catch(e) {
+            console.log(e)
+        }
+
+        if(params_natcats.length) {
+            filtered_natcats = natcats.filter(n => params_natcats.includes(n.id.toString()))
+        } else {
+            filtered_natcats = natcats
+        }
+
         natcats_result = filtered_natcats
-    } else {
-        filtered_natcats = natcats
-        natcats_result = natcats
+
+
+        makeFilter()
+        setupEventHandlers()
+
+        // load first page by default
+        showItems(currentPage)
+
+        setupModal()
+    } catch(e) {
+        console.log(e)
     }
-
-    makeFilter()
-    setupEventHandler()
-
-    // load first page by default
-    showItems(currentPage)
-
-    setupModal()
 }
 
 init()

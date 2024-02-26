@@ -26,8 +26,6 @@
                 Click on a cat image to see all the traits of a specific cat.<br /></br >
 
                 That said, happy filtering! Cheers <a href="https://x.com/crypt0biwan" target="_blank">Obi</a> ✌️ (<a href="https://github.com/crypt0biwan/natcats-viewer/" target="_blank">source</a>)
-
-
             </div>
         </div>
 
@@ -50,8 +48,15 @@
                         <div class="col">
                             <form>
                                 <div class="row g-3 mb-2 align-items-center">
-                                    <div class="col px-5">
-                                        <input type="text" required class="form-control" id="search" placeholder="Filter Natcatid (e.g. 888)">
+                                    <div class="col-12 col-xxl-3 ps-5 text-start">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-for-sale">
+                                            <label class="form-check-label" for="filter-for-sale">Only show for sale on mscribe</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-xxl-9 px-5 ps-xxl-0">
+                                        <input type="text" required class="form-control form-control-inline" id="search" placeholder="Filter Natcatid (e.g. 888)">
                                     </div>
                                 </div>
                             </form>                    
@@ -82,6 +87,6 @@
             </div>
         </div>
 
-        <script src="./js/index.js?ts=1708600659936"></script>
+        <script src="./js/index.js?ts=1708944193550"></script>
     </body>
 </html>
