@@ -74,6 +74,10 @@ div.natcat {
     overflow: hidden;
 }
 
+div.natcat img {
+    cursor: pointer;
+}
+
 .for-sale {
     width: 100px;
     background: #e82;
